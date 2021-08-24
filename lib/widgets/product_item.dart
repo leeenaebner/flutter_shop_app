@@ -35,13 +35,14 @@ class ProductItem extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           leading: Consumer<Product>(
-            builder: (ctx, product, child) => IconButton(
+            builder: (ctx, product, _) => IconButton(
               icon: Icon(productData.isFavorite
                   ? Icons.favorite
                   : Icons.favorite_border),
               onPressed: () => productData.toggleFavorite(),
               color: Theme.of(context).accentColor,
             ),
+            // child: Text("never changes"),
           ),
           trailing: IconButton(
             icon: Icon(Icons.shopping_cart),
