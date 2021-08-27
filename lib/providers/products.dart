@@ -49,7 +49,7 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product product) {
     final url =
-        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/products";
+        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/products.json";
     return http
         .post(
           Uri.parse(url),
