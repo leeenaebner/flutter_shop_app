@@ -114,34 +114,36 @@ class _EditProductScreenState extends State<EditProductScreen> {
             content: Text("Something went wrong..."),
             actions: [
               TextButton(
-                onPressed: () {
-                  // setState(() {
-                  //   _isLoading = false;
-                  // });
-                  return Navigator.of(ctx).pop();
-                },
+                onPressed: () => Navigator.of(ctx).pop(),
                 child: Text("OK"),
               ),
             ],
           ),
         );
-      } finally {
-        print("iam here");
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
       }
     } else {
-      Provider.of<Products>(
-        context,
-        listen: false,
-      ).updateProduct(_editedProduct.id, _editedProduct);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pop();
+      try {
+        await productsData.updateProduct(_editedProduct.id, _editedProduct);
+      } catch (error) {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text("An Error occured"),
+            content: Text("Something went wrong..."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
     }
+    setState(() {
+      _isLoading = false;
+    });
+    Navigator.of(context).pop();
   }
 
   @override

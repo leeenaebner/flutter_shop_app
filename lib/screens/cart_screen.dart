@@ -9,6 +9,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartData = Provider.of<Cart>(context);
+    final _isLoading = false;
 
     return Scaffold(
       appBar: AppBar(
@@ -31,23 +32,10 @@ class CartScreen extends StatelessWidget {
                     Chip(
                       label: Text(
                         '\$${cartData.totalAmount.toStringAsFixed(2)}',
-                        //style: TextStyle(color: Colors.white),
                       ),
                       backgroundColor: Theme.of(context).primaryColorLight,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Provider.of<Orders>(context, listen: false).addOrder(
-                          cartData.items.values.toList(),
-                          cartData.totalAmount,
-                        );
-                        cartData.clear();
-                      },
-                      child: Text(
-                        "ORDER NOW",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                    OrderNowButton(cartData: cartData),
                   ],
                 ),
               ),
@@ -69,6 +57,62 @@ class CartScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class OrderNowButton extends StatefulWidget {
+  const OrderNowButton({
+    Key? key,
+    required this.cartData,
+  }) : super(key: key);
+
+  final Cart cartData;
+
+  @override
+  _OrderNowButtonState createState() => _OrderNowButtonState();
+}
+
+class _OrderNowButtonState extends State<OrderNowButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaffold = ScaffoldMessenger.of(context);
+    return TextButton(
+      onPressed: (widget.cartData.totalAmount == 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              try {
+                await Provider.of<Orders>(context, listen: false).addOrder(
+                  widget.cartData.items.values.toList(),
+                  widget.cartData.totalAmount,
+                );
+                widget.cartData.clear();
+              } catch (error) {
+                scaffold.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "Ordering failed...",
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              setState(() {
+                _isLoading = false;
+              });
+            },
+      child: _isLoading
+          ? CircularProgressIndicator()
+          : Text(
+              "ORDER NOW",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
     );
   }
 }
