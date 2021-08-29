@@ -26,7 +26,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //final orderData = Provider.of<Orders>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Orders"),
@@ -38,7 +37,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
               return Center(child: CircularProgressIndicator());
             } else {
               if (dataSnapshot.error != null) {
-                return Center();
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
               } else {
                 return Consumer<Orders>(
                   builder: (ctx, orderData, _) => ListView.builder(

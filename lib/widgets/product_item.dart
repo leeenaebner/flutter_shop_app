@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/providers/auth.dart';
 import '../screens/product_detail_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/product.dart';
@@ -33,7 +34,9 @@ class ProductItem extends StatelessWidget {
                   : Icons.favorite_border),
               onPressed: () async {
                 try {
-                  await productData.updateProductIsFavorite();
+                  final auth = Provider.of<Auth>(context, listen: false);
+                  await productData.updateProductIsFavorite(
+                      auth.token!, auth.userId!);
                 } catch (error) {
                   scaffold.showSnackBar(
                     SnackBar(

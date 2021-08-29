@@ -24,21 +24,28 @@ class Product with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProductIsFavorite() async {
-    final newValue = !isFavorite;
+  Future<void> updateProductIsFavorite(String token, String userId) async {
+    final oldValue = isFavorite;
+    isFavorite = !isFavorite;
+    notifyListeners();
+
     final url =
-        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/products/$id.json";
+        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId/$id.json?auth=$token";
 
     try {
-      await http.patch(Uri.parse(url),
+      final response = await http.put(Uri.parse(url),
           body: json.encode({
-            'isFavorite': newValue,
+            'isFavorite': isFavorite,
           }));
+
+      if (response.statusCode >= 400) {
+        isFavorite = oldValue;
+        notifyListeners();
+      }
     } catch (error) {
-      isFavorite = !newValue;
+      isFavorite = oldValue;
+      notifyListeners();
       throw error;
     }
-    this.isFavorite = newValue;
-    notifyListeners();
   }
 }

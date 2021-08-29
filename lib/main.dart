@@ -7,10 +7,13 @@ import './screens/product_detail_screen.dart';
 import './screens/orders_screen.dart';
 import './screens/user_products_screen.dart';
 import './screens/edit_product_screen.dart';
+import './screens/auth_screen.dart';
+import './screens/splash_screen.dart';
 
 import './providers/products.dart';
 import './providers/cart.dart';
 import './providers/orders.dart';
+import './providers/auth.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,53 +25,50 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => Products(),
+          create: (ctx) => Auth(),
+        ),
+        ChangeNotifierProxyProvider<Auth, Products>(
+          update: (ctx, auth, previousProducts) => Products(
+              auth.token,
+              auth.userId,
+              previousProducts == null ? [] : previousProducts.items),
+          create: (ctx) => Products(null, null, []),
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (ctx) => Orders(),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          update: (ctx, auth, previousOrders) => Orders(auth.token, auth.userId,
+              previousOrders == null ? [] : previousOrders.orders),
+          create: (ctx) => Orders(null, null, []),
         ),
       ],
-      child: ChangeNotifierProvider(
-        create: (ctx) => Products(),
-        child: MaterialApp(
+      child: Consumer<Auth>(
+        builder: (ctx, authData, _) => MaterialApp(
             title: 'Shopping App',
             theme: ThemeData(
                 primarySwatch: Colors.brown,
                 accentColor: Colors.orangeAccent,
                 fontFamily: 'Lato'),
-            //home: ProductsOverviewScreen(),
+            home: authData.isAuth
+                ? ProductsOverviewScreen()
+                : FutureBuilder(
+                    future: authData.tryAutoLogin(),
+                    builder: (ctx, authResultSnapshot) =>
+                        authResultSnapshot.connectionState ==
+                                ConnectionState.waiting
+                            ? SplashScreen()
+                            : AuthScreen(),
+                  ),
             routes: {
-              '/': (ctx) => ProductsOverviewScreen(),
-              '/product-details': (ctx) => ProductDetailScreen(),
-              '/cart': (ctx) => CartScreen(),
-              '/orders': (ctx) => OrdersScreen(),
-              '/user-products': (ctx) => UserProductsScreen(),
-              '/edit-product': (ctx) => EditProductScreen(),
+              ProductsOverviewScreen.routeName: (ctx) =>
+                  ProductsOverviewScreen(),
+              ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+              CartScreen.routeName: (ctx) => CartScreen(),
+              OrdersScreen.routeName: (ctx) => OrdersScreen(),
+              UserProductsScreen.routeName: (ctx) => UserProductsScreen(),
+              EditProductScreen.routeName: (ctx) => EditProductScreen(),
             }),
-      ),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Shopping App"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Welcome',
-            ),
-          ],
-        ),
       ),
     );
   }

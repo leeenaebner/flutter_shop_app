@@ -17,31 +17,23 @@ class OrderItem {
   });
 }
 
-final URL =
-    "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/orders.json";
-
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String? _authToken;
+  final String? _userId;
+
+  Orders(this._authToken, this._userId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
-  // void addOrder(List<CartItem> cartProducts, double total) {
-  //   _orders.insert(
-  //       0,
-  //       OrderItem(
-  //         id: DateTime.now().toString(),
-  //         amount: total,
-  //         products: cartProducts,
-  //         dateTime: DateTime.now(),
-  //       ));
-  //   notifyListeners();
-  // }
-
   Future<void> fetchAndStoreOrders() async {
+    final url =
+        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/orders/$_userId.json?auth=$_authToken";
+
     try {
-      final response = await http.get(Uri.parse(URL));
+      final response = await http.get(Uri.parse(url));
       final extractedData = json.decode(response.body) as Map<String, dynamic>?;
       if (extractedData == null) {
         return;
@@ -68,10 +60,13 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
+    final url =
+        "https://flutter-shop-app-91947-default-rtdb.europe-west1.firebasedatabase.app/orders/$_userId.json?auth=$_authToken";
+
     try {
       final timestamp = DateTime.now();
 
-      final response = await http.post(Uri.parse(URL),
+      final response = await http.post(Uri.parse(url),
           body: json.encode({
             'amount': total,
             'dateTime': timestamp.toIso8601String(),
