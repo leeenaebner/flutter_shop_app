@@ -1,3 +1,4 @@
+import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/models/http_exception.dart';
@@ -11,7 +12,8 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -21,6 +23,40 @@ class _AuthCardState extends State<AuthCard> {
 
   var _isLoading = false;
   final _passwordController = TextEditingController();
+  var _containerHeight = 260;
+  AnimationController? _controller;
+  Animation<Offset>? _slideAnimation;
+  Animation<double>? _opacityAnimation;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+    _slideAnimation = Tween<Offset>(
+        begin: Offset(0, -1.5),
+        end: Offset(
+          0,
+          0,
+        )).animate(CurvedAnimation(
+      parent: _controller!,
+      curve: Curves.easeIn,
+    ));
+    _slideAnimation!.addListener(() => setState(() {}));
+
+    _opacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.easeIn));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller!.dispose();
+    super.dispose();
+  }
 
   void _showErrorDialog(BuildContext context, String msg) {
     showDialog(
@@ -62,6 +98,7 @@ class _AuthCardState extends State<AuthCard> {
       }
     } on HttpException catch (error) {
       var errorMessage = "Authentication failed";
+      print(error.message);
 
       if (error.toString().contains("EMAIL_EXISTS")) {
         errorMessage = "Email address already exists. Try another one.";
@@ -89,10 +126,12 @@ class _AuthCardState extends State<AuthCard> {
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      _controller!.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _controller!.reverse();
     }
   }
 
@@ -105,12 +144,18 @@ class _AuthCardState extends State<AuthCard> {
         borderRadius: BorderRadius.circular(10),
       ),
       elevation: 8,
-      child: Container(
-        height: _authMode == AuthMode.Signup ? 320 : 260,
-        constraints:
-            BoxConstraints(minHeight: _authMode == AuthMode.Signup ? 320 : 260),
+      child: AnimatedContainer(
+        height: _authMode == AuthMode.Signup ? 380 : 300,
+        //height: _containerAnimation!.value.height,
+        constraints: BoxConstraints(
+          minHeight: _authMode == AuthMode.Signup
+              ? 380
+              : 300, // _containerAnimation!.value.height,
+        ),
         width: deviceSize.width * 0.75,
         padding: EdgeInsets.all(16),
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeIn,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -141,21 +186,35 @@ class _AuthCardState extends State<AuthCard> {
                     _authData['pw'] = val!;
                   },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: _authMode == AuthMode.Signup
-                        ? (val) {
-                            if (val! != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
-                          }
-                        : null,
-                    onSaved: (val) {
-                      _authData['pw'] = val!;
-                    },
+                //if (_authMode == AuthMode.Signup)
+                AnimatedContainer(
+                  curve: Curves.easeIn,
+                  constraints: BoxConstraints(
+                      minHeight: _authMode == AuthMode.Signup ? 100 : 0,
+                      maxHeight: _authMode == AuthMode.Signup ? 150 : 0),
+                  duration: Duration(milliseconds: 300),
+                  child: FadeTransition(
+                    opacity: _opacityAnimation!,
+                    child: SlideTransition(
+                      position: _slideAnimation!,
+                      child: TextFormField(
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        validator: _authMode == AuthMode.Signup
+                            ? (val) {
+                                if (val! != _passwordController.text) {
+                                  return 'Passwords do not match';
+                                }
+                              }
+                            : null,
+                        onSaved: (val) {
+                          //_authData['pw'] = val!;
+                        },
+                      ),
+                    ),
                   ),
+                ),
                 SizedBox(
                   height: 20,
                 ),

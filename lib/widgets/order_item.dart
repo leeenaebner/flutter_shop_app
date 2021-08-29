@@ -21,28 +21,38 @@ class _OrderItemState extends State<OrderItem> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(15),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text("\$${widget.order.amount}"),
-            subtitle: Text(
-              DateFormat("dd/MM/yyyy hh:mm").format(
-                widget.order.dateTime,
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeIn,
+      height: isExpanded
+          ? min(widget.order.products.length * 20.0 + 150, 200)
+          : 110,
+      child: Card(
+        margin: EdgeInsets.all(15),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text("\$${widget.order.amount}"),
+              subtitle: Text(
+                DateFormat("dd/MM/yyyy hh:mm").format(
+                  widget.order.dateTime,
+                ),
+              ),
+              trailing: IconButton(
+                icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                onPressed: () {
+                  setState(() {
+                    isExpanded = !isExpanded;
+                  });
+                },
               ),
             ),
-            trailing: IconButton(
-              icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
-              onPressed: () {
-                setState(() {
-                  isExpanded = !isExpanded;
-                });
-              },
-            ),
-          ),
-          if (isExpanded)
-            Container(
+            AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              height: isExpanded
+                  ? min(widget.order.products.length * 20.0 + 20, 600)
+                  : 0,
+              child: Container(
                 height: min(widget.order.products.length * 20.0 + 20, 600),
                 padding: EdgeInsets.all(10),
                 child: ListView(
@@ -60,8 +70,11 @@ class _OrderItemState extends State<OrderItem> {
                         ),
                       )
                       .toList(),
-                )),
-        ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
